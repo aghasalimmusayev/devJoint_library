@@ -12,6 +12,7 @@ async function bootstrap() {
             whitelist: true,
             forbidNonWhitelisted: true,
             transform: true,
+            transformOptions: { exposeUnsetFields: false },
         }),
     );
     app.useGlobalFilters(new HttpExceptionFilter());
@@ -25,7 +26,7 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, swaggerConfig);
     SwaggerModule.setup('api/docs', app, document);
 
-    await app.listen(process.env.PORT ?? 3014);
+    await app.listen(process.env.PORT ?? 4014);
 }
 
 void bootstrap();

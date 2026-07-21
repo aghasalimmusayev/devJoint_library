@@ -10,22 +10,19 @@ import { MembersModule } from './members/members.module';
 import { LoansModule } from './loans/loans.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [typeormConfig],
-    }),
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) =>
-        configService.get<TypeOrmModuleOptions>('database')!,
-    }),
-    AuthorsModule,
-    BooksModule,
-    MembersModule,
-    LoansModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+    imports: [
+        ConfigModule.forRoot({ isGlobal: true, load: [typeormConfig] }),
+        TypeOrmModule.forRootAsync({
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) =>
+                configService.get<TypeOrmModuleOptions>('database')!,
+        }),
+        AuthorsModule,
+        BooksModule,
+        MembersModule,
+        LoansModule,
+    ],
+    controllers: [AppController],
+    providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

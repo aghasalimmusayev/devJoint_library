@@ -1,18 +1,9 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
+import { BaseEntity } from '../../common/entities/base.entity';
 import { Loan } from '../../loans/entities/loan.entity';
 
 @Entity('members')
-export class Member {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class Member extends BaseEntity {
   @Column()
   fullName: string;
 
@@ -27,10 +18,4 @@ export class Member {
 
   @OneToMany(() => Loan, (loan) => loan.member)
   loans: Loan[];
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

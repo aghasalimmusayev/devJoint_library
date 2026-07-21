@@ -1,20 +1,10 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { BaseEntity } from '../../common/entities/base.entity';
 import { Book } from '../../books/entities/book.entity';
 import { Member } from '../../members/entities/member.entity';
 
 @Entity('loans')
-export class Loan {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class Loan extends BaseEntity {
   @ManyToOne(() => Book, (book) => book.loans, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'bookId' })
   book: Book;
@@ -29,15 +19,9 @@ export class Loan {
   @Column()
   memberId: string;
 
-  @CreateDateColumn()
-  borrowedAt: Date;
-
   @Column({ type: 'date' })
   dueDate: string;
 
   @Column({ type: 'timestamp', nullable: true })
   returnedAt: Date | null;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

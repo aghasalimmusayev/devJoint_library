@@ -1,36 +1,21 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
+import { BaseEntity } from '../../common/entities/base.entity';
 import { Book } from '../../books/entities/book.entity';
 
 @Entity('authors')
-export class Author {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+export class Author extends BaseEntity {
+    @Column()
+    firstName: string;
 
-  @Column()
-  firstName: string;
+    @Column()
+    lastName: string;
 
-  @Column()
-  lastName: string;
+    @Column({ type: 'text', nullable: true })
+    bio: string | null;
 
-  @Column({ type: 'text', nullable: true })
-  bio: string | null;
+    @Column({ type: 'date', nullable: true })
+    birthDate: string | null;
 
-  @Column({ type: 'date', nullable: true })
-  birthDate: string | null;
-
-  @OneToMany(() => Book, (book) => book.author)
-  books: Book[];
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
+    @OneToMany(() => Book, (book) => book.author)
+    books: Book[];
 }
