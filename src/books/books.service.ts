@@ -17,10 +17,11 @@ function isSortableField(value: unknown): value is SortableField {
 
 @Injectable()
 export class BooksService {
-    constructor(@InjectRepository(Book)
-    private readonly bookRepository: Repository<Book>,
+    constructor(
+        @InjectRepository(Book)
+        private readonly bookRepository: Repository<Book>,
         private readonly authorsService: AuthorsService,
-    ) { }
+    ) {}
 
     async create(dto: CreateBookDto): Promise<BookResponseDto> {
         await this.authorsService.getOrThrow(dto.authorId);
@@ -72,7 +73,7 @@ export class BooksService {
     async remove(id: string): Promise<{ message: string }> {
         const book = await this.getOrThrow(id);
         await this.bookRepository.remove(book);
-        return { message: 'The book has been removed' }
+        return { message: 'The book has been removed' };
     }
 
     private async save(book: Book): Promise<Book> {

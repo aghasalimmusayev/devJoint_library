@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Patch, Query } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpStatus,
+    Param,
+    ParseUUIDPipe,
+    Post,
+    Patch,
+    Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -9,7 +20,7 @@ import { BookQueryDto } from './dto/book-query.dto';
 @ApiTags('books')
 @Controller('books')
 export class BooksController {
-    constructor(private readonly booksService: BooksService) { }
+    constructor(private readonly booksService: BooksService) {}
 
     @Post()
     @ApiOperation({ summary: 'Create a new book' })
@@ -48,7 +59,9 @@ export class BooksController {
     @ApiOperation({ summary: 'Delete a book' })
     @ApiResponse({ status: HttpStatus.OK })
     @ApiResponse({ status: HttpStatus.NOT_FOUND })
-    remove(@Param('id', ParseUUIDPipe) id: string): Promise<{ message: string }> {
+    remove(
+        @Param('id', ParseUUIDPipe) id: string,
+    ): Promise<{ message: string }> {
         return this.booksService.remove(id);
     }
 }

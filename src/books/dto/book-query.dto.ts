@@ -3,8 +3,8 @@ import { IsOptional, IsUUID } from 'class-validator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 export class BookQueryDto extends PaginationQueryDto {
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsUUID()
-  authorId?: string;
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsUUID()
+    authorId?: string;
 }

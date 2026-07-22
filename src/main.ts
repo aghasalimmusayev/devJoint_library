@@ -16,7 +16,9 @@ async function bootstrap() {
         }),
     );
     app.useGlobalFilters(new HttpExceptionFilter());
-    app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+    app.useGlobalInterceptors(
+        new ClassSerializerInterceptor(app.get(Reflector)),
+    );
 
     const swaggerConfig = new DocumentBuilder()
         .setTitle('Library Management API')

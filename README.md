@@ -6,18 +6,27 @@ Week 1 intern task: a layered CRUD REST API (Author, Book, Member, Loan) built w
 
 - NestJS 11
 - TypeORM + PostgreSQL
+- @nestjs/config
 - class-validator / class-transformer
 - Swagger (OpenAPI)
 - Jest for testing
 
 ## Architecture
 
-`Controller -> Service -> Repository`, entities are never returned directly — every response goes through a Response DTO (`@Exclude`/`@Expose` + `ClassSerializerInterceptor`) to avoid leaking internal columns and to prevent circular JSON when serializing bidirectional relations (e.g. `Author <-> Book`).
+`Controller -> Service -> Repository`, entities are never returned directly — every response goes through a Response DTO (`@Exclude`/`@Expose` + a global `ClassSerializerInterceptor`) to avoid leaking internal columns (e.g. FK ids) and to prevent circular JSON when serializing bidirectional relations (e.g. `Author <-> Book`).
 
-## Domain / tables
+All entities extend a shared `BaseEntity` (`src/common/entities/base.entity.ts`) that provides `id` (uuid), `createdAt`, `updatedAt`.
 
-- **authors** (1) — (N) **books**
-- **members** (1) — (N) **loans** (N) — (1) **books** (a `loans` join entity carries `borrowedAt` / `dueDate` / `returnedAt`)
+## Domain
+
+- **Author** (1) — (N) **Book**
+- **Member** (1) — (N) **Loan** (N) — (1) **Book** — `Loan` is a standalone entity (not a plain many-to-many) so it can carry `borrowedAt` / `dueDate` / `returnedAt`
+
+## Business rules
+
+- Borrowing a book (`POST /loans`) requires `Book.availableCopies > 0`; it decrements the count and fails with `400` otherwise.
+- `dueDate` (on create and on update) must be a future date — validated in `LoansService`.
+- Returning a book (`PATCH /loans/:id/return`) sets `returnedAt` and increments `Book.availableCopies`; returning an already-returned loan fails with `400`.
 
 ## Setup
 
@@ -33,25 +42,28 @@ Week 1 intern task: a layered CRUD REST API (Author, Book, Member, Loan) built w
    ```sql
    CREATE DATABASE library_db;
    ```
-   Tables are created automatically on boot (`synchronize: true`, dev-only setting).
+   Tables are created automatically on boot (`synchronize: true` while `NODE_ENV !== 'production'`).
 
 ## Run
 
 ```bash
 # development (watch mode)
-npm run start:dev
+npm run dev
+
+# without watch
+npm run start
 
 # production build
 npm run build
 npm run start:prod
 ```
 
-The API listens on `PORT` from `.env` (default `3000`).
+The API listens on `PORT` from `.env` (default `3000` if unset).
 
 ## API docs
 
-Swagger UI: `http://localhost:<PORT>/api/docs`
-Raw OpenAPI JSON (importable into Postman): `http://localhost:<PORT>/api/docs-json`
+- Swagger UI: `http://localhost:<PORT>/api/docs`
+- Raw OpenAPI JSON (importable into Postman): `http://localhost:<PORT>/api/docs-json`
 
 ## Tests
 
@@ -64,9 +76,16 @@ npm run test:cov    # coverage
 
 | Resource | Routes |
 |---|---|
-| Authors | `POST/GET /authors`, `GET/PUT/DELETE /authors/:id` |
-| Books | `POST/GET /books` (pagination `page`, `limit`, sorting `sortBy`, `order`, filter `authorId`), `GET/PUT/DELETE /books/:id` |
-| Members | `POST/GET /members`, `GET/PUT/DELETE /members/:id` |
-| Loans | `POST/GET /loans`, `GET/PUT/DELETE /loans/:id`, `PATCH /loans/:id/return` (borrow/return flow, adjusts `Book.availableCopies`) |
+| Authors | `POST/GET /authors`, `GET/PATCH/DELETE /authors/:id` |
+| Books | `POST/GET /books` (pagination `page`, `limit`, sorting `sortBy`, `order`, filter `authorId`), `GET/PATCH/DELETE /books/:id` |
+| Members | `POST/GET /members`, `GET/PATCH/DELETE /members/:id` |
+| Loans | `POST/GET /loans`, `GET/PATCH/DELETE /loans/:id`, `PATCH /loans/:id/return` (borrow/return flow, adjusts `Book.availableCopies`) |
 
-All create endpoints return `201 Created`; missing resources return `404 Not Found`; validation failures return `400 Bad Request` with a centralized error shape (`src/common/filters/http-exception.filter.ts`).
+## Response conventions
+
+- Create → `201 Created`
+- Read / update / delete on an existing resource → `200 OK`
+- Missing resource → `404 Not Found`
+- Validation / business-rule failures → `400 Bad Request`
+- Delete endpoints return a body: `{ "message": "The <resource> has been removed" }`
+- All errors go through a centralized filter (`src/common/filters/http-exception.filter.ts`) and share one JSON shape: `{ statusCode, timestamp, path, message }`

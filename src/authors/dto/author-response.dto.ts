@@ -32,5 +32,7 @@ export class AuthorResponseDto {
     @Expose()
     updatedAt: Date;
 
-    constructor(partial: Partial<Author>) { Object.assign(this, partial); }
+    constructor(partial: Partial<Author>) {
+        Object.assign(this, partial);
+    }
 }

@@ -10,4 +10,4 @@ import { AuthorsController } from './authors.controller';
     providers: [AuthorsService],
     exports: [AuthorsService],
 })
-export class AuthorsModule { }
+export class AuthorsModule {}

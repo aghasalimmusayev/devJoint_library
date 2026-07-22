@@ -8,7 +8,10 @@ import { AuthorResponseDto } from './dto/author-response.dto';
 
 @Injectable()
 export class AuthorsService {
-    constructor(@InjectRepository(Author) private readonly authorRepository: Repository<Author>) { }
+    constructor(
+        @InjectRepository(Author)
+        private readonly authorRepository: Repository<Author>,
+    ) {}
 
     async create(dto: CreateAuthorDto): Promise<AuthorResponseDto> {
         const author = this.authorRepository.create(dto);
@@ -36,12 +39,13 @@ export class AuthorsService {
     async remove(id: string): Promise<{ message: string }> {
         const author = await this.getOrThrow(id);
         await this.authorRepository.remove(author);
-        return { message: 'The author has been removed' }
+        return { message: 'The author has been removed' };
     }
 
     async getOrThrow(id: string): Promise<Author> {
         const author = await this.authorRepository.findOne({ where: { id } });
-        if (!author) throw new NotFoundException(`Author with id ${id} not found`);
+        if (!author)
+            throw new NotFoundException(`Author with id ${id} not found`);
         return author;
     }
 }

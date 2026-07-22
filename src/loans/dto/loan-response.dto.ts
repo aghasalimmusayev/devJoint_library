@@ -6,33 +6,33 @@ import { MemberResponseDto } from '../../members/dto/member-response.dto';
 
 @Exclude()
 export class LoanResponseDto {
-  @ApiProperty()
-  @Expose()
-  id: string;
+    @ApiProperty()
+    @Expose()
+    id: string;
 
-  @ApiProperty({ type: () => BookResponseDto })
-  @Expose()
-  @Type(() => BookResponseDto)
-  book: BookResponseDto;
+    @ApiProperty({ type: () => BookResponseDto })
+    @Expose()
+    @Type(() => BookResponseDto)
+    book: BookResponseDto;
 
-  @ApiProperty({ type: () => MemberResponseDto })
-  @Expose()
-  @Type(() => MemberResponseDto)
-  member: MemberResponseDto;
+    @ApiProperty({ type: () => MemberResponseDto })
+    @Expose()
+    @Type(() => MemberResponseDto)
+    member: MemberResponseDto;
 
-  @ApiProperty()
-  @Expose()
-  borrowedAt: Date;
+    @ApiProperty()
+    @Expose()
+    borrowedAt: Date;
 
-  @ApiProperty()
-  @Expose()
-  dueDate: string;
+    @ApiProperty()
+    @Expose()
+    dueDate: string;
 
-  @ApiProperty({ nullable: true })
-  @Expose()
-  returnedAt: Date | null;
+    @ApiProperty({ nullable: true })
+    @Expose()
+    returnedAt: Date | null;
 
-  constructor(partial: Partial<Loan>) {
-    Object.assign(this, partial);
-  }
+    constructor(partial: Partial<Loan>) {
+        Object.assign(this, partial);
+    }
 }

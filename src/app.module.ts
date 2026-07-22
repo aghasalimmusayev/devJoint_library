@@ -25,4 +25,4 @@ import { LoansModule } from './loans/loans.module';
     controllers: [AppController],
     providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
