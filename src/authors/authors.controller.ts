@@ -14,6 +14,7 @@ import { AuthorsService } from './authors.service';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { AuthorResponseDto } from './dto/author-response.dto';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('authors')
 @Controller('authors')
@@ -27,6 +28,7 @@ export class AuthorsController {
         return this.authorsService.create(dto);
     }
 
+    @Public()
     @Get()
     @ApiOperation({ summary: 'List all authors' })
     @ApiResponse({ status: HttpStatus.OK, type: [AuthorResponseDto] })
@@ -34,6 +36,7 @@ export class AuthorsController {
         return this.authorsService.findAll();
     }
 
+    @Public()
     @Get(':id')
     @ApiOperation({ summary: 'Get an author by id' })
     @ApiResponse({ status: HttpStatus.OK, type: AuthorResponseDto })

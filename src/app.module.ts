@@ -4,14 +4,17 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import typeormConfig from './config/typeorm.config';
+import jwtConfig from './config/jwt.config';
 import { AuthorsModule } from './authors/authors.module';
 import { BooksModule } from './books/books.module';
 import { MembersModule } from './members/members.module';
 import { LoansModule } from './loans/loans.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
     imports: [
-        ConfigModule.forRoot({ isGlobal: true, load: [typeormConfig] }),
+        ConfigModule.forRoot({ isGlobal: true, load: [typeormConfig, jwtConfig] }),
         TypeOrmModule.forRootAsync({
             inject: [ConfigService],
             useFactory: (configService: ConfigService) =>
@@ -21,6 +24,8 @@ import { LoansModule } from './loans/loans.module';
         BooksModule,
         MembersModule,
         LoansModule,
+        UsersModule,
+        AuthModule,
     ],
     controllers: [AppController],
     providers: [AppService],
