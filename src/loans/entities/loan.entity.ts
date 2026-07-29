@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { Book } from '../../books/entities/book.entity';
-import { Member } from '../../members/entities/member.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('loans')
 export class Loan extends BaseEntity {
@@ -12,12 +12,12 @@ export class Loan extends BaseEntity {
     @Column()
     bookId: string;
 
-    @ManyToOne(() => Member, (member) => member.loans, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'memberId' })
-    member: Member;
+    @ManyToOne(() => User, (user) => user.loans, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'userId' })
+    user: User;
 
     @Column()
-    memberId: string;
+    userId: string;
 
     @Column({ type: 'date' })
     dueDate: string;

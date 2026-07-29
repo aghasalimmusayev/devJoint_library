@@ -1,7 +1,8 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { Role } from '../../common/enums/role.enum';
 import { Gender } from '../../common/enums/gender.enum';
+import { Loan } from '../../loans/entities/loan.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -25,4 +26,7 @@ export class User extends BaseEntity {
 
     @Column({ type: 'enum', enum: Role, default: Role.USER })
     role: Role;
+
+    @OneToMany(() => Loan, (loan) => loan.user)
+    loans: Loan[];
 }

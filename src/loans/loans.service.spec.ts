@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { LoansService } from './loans.service';
 import { Loan } from './entities/loan.entity';
 import { Book } from '../books/entities/book.entity';
-import { Member } from '../members/entities/member.entity';
+import { User } from '../users/entities/user.entity';
 
 type MockRepository<T extends object = any> = Partial<
     Record<keyof Repository<T>, jest.Mock>
@@ -23,7 +23,7 @@ describe('LoansService', () => {
     let service: LoansService;
     let loanRepository: MockRepository<Loan>;
     let bookRepository: MockRepository<Book>;
-    let memberRepository: MockRepository<Member>;
+    let userRepository: MockRepository<User>;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -38,7 +38,7 @@ describe('LoansService', () => {
                     useValue: createMockRepository(),
                 },
                 {
-                    provide: getRepositoryToken(Member),
+                    provide: getRepositoryToken(User),
                     useValue: createMockRepository(),
                 },
             ],
@@ -47,20 +47,20 @@ describe('LoansService', () => {
         service = module.get<LoansService>(LoansService);
         loanRepository = module.get(getRepositoryToken(Loan));
         bookRepository = module.get(getRepositoryToken(Book));
-        memberRepository = module.get(getRepositoryToken(Member));
+        userRepository = module.get(getRepositoryToken(User));
     });
 
     describe('create', () => {
         const dto = {
             bookId: 'book-1',
-            memberId: 'member-1',
             dueDate: '2026-08-01',
         };
+        const currentUserId = 'user-1';
 
         it('should throw NotFoundException when the book does not exist', async () => {
             bookRepository.findOne!.mockResolvedValue(null);
 
-            await expect(service.create(dto)).rejects.toThrow(
+            await expect(service.create(dto, currentUserId)).rejects.toThrow(
                 NotFoundException,
             );
         });
@@ -71,27 +71,26 @@ describe('LoansService', () => {
                 availableCopies: 0,
             });
 
-            await expect(service.create(dto)).rejects.toThrow(
+            await expect(service.create(dto, currentUserId)).rejects.toThrow(
                 BadRequestException,
             );
         });
 
         it('should decrement availableCopies and create the loan', async () => {
             const book = { id: 'book-1', availableCopies: 2 };
-            const member = { id: 'member-1' };
-            const createdLoan = { id: 'loan-1', ...dto };
+            const user = { id: currentUserId };
+            const createdLoan = { id: 'loan-1', ...dto, userId: currentUserId };
 
             bookRepository.findOne!.mockResolvedValueOnce(book);
-            memberRepository.findOne!.mockResolvedValue(member);
             loanRepository.create!.mockReturnValue(createdLoan);
             loanRepository.save!.mockResolvedValue(createdLoan);
             loanRepository.findOne!.mockResolvedValue({
                 ...createdLoan,
                 book,
-                member,
+                user,
             });
 
-            await service.create(dto);
+            await service.create(dto, currentUserId);
 
             expect(bookRepository.save).toHaveBeenCalledWith(
                 expect.objectContaining({ availableCopies: 1 }),

@@ -5,9 +5,7 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-
     const app = await NestFactory.create(AppModule);
-
     app.useGlobalPipes(
         new ValidationPipe({
             whitelist: true,
@@ -20,15 +18,14 @@ async function bootstrap() {
     app.useGlobalInterceptors(
         new ClassSerializerInterceptor(app.get(Reflector)),
     );
-
     const swaggerConfig = new DocumentBuilder()
         .setTitle('Library Management API')
-        .setDescription('CRUD REST API for Authors, Books, Members and Loans')
+        .setDescription('CRUD REST API for Authors, Books, Users and Loans')
         .setVersion('1.0')
+        .addBearerAuth()
         .build();
     const document = SwaggerModule.createDocument(app, swaggerConfig);
     SwaggerModule.setup('api/docs', app, document);
-
     await app.listen(process.env.PORT ?? 4014);
 }
 

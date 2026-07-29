@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -24,7 +24,8 @@ export class UsersService {
         return this.userRepository.findOne({ where: { email } });
     }
 
-    async update(id: string, dto: UpdateUserDto): Promise<UserResponseDto> {
+    async update(id: string, dto: UpdateUserDto, currentUserId: string): Promise<UserResponseDto> {
+        if (id !== currentUserId) throw new ForbiddenException('You can only update your own account');
         const user = await this.userRepository.findOne({ where: { id } });
         if (!user) throw new NotFoundException(`User with id ${id} not found`);
         Object.assign(user, dto);
@@ -32,7 +33,8 @@ export class UsersService {
         return new UserResponseDto(saved);
     }
 
-    async remove(id: string): Promise<{ message: string }> {
+    async remove(id: string, currentUserId: string): Promise<{ message: string }> {
+        if (id !== currentUserId) throw new ForbiddenException('You can only delete your own account');
         const user = await this.userRepository.findOne({ where: { id } });
         if (!user) throw new NotFoundException(`User with id ${id} not found`);
         await this.userRepository.remove(user);

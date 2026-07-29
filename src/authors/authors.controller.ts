@@ -9,18 +9,22 @@ import {
     Patch,
     Post,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthorsService } from './authors.service';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { AuthorResponseDto } from './dto/author-response.dto';
 import { Public } from '../common/decorators/public.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums/role.enum';
 
+@ApiBearerAuth()
 @ApiTags('authors')
 @Controller('authors')
 export class AuthorsController {
     constructor(private readonly authorsService: AuthorsService) {}
 
+    @Roles(Role.ADMIN)
     @Post()
     @ApiOperation({ summary: 'Create a new author' })
     @ApiResponse({ status: HttpStatus.CREATED, type: AuthorResponseDto })
@@ -47,6 +51,7 @@ export class AuthorsController {
         return this.authorsService.findOne(id);
     }
 
+    @Roles(Role.ADMIN)
     @Patch(':id')
     @ApiOperation({ summary: 'Update an author' })
     @ApiResponse({ status: HttpStatus.OK, type: AuthorResponseDto })
@@ -58,6 +63,7 @@ export class AuthorsController {
         return this.authorsService.update(id, dto);
     }
 
+    @Roles(Role.ADMIN)
     @Delete(':id')
     @ApiOperation({ summary: 'Delete an author' })
     @ApiResponse({ status: HttpStatus.OK })

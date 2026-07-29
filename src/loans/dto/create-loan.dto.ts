@@ -7,10 +7,6 @@ export class CreateLoanDto {
     bookId: string;
 
     @ApiProperty()
-    @IsUUID()
-    memberId: string;
-
-    @ApiProperty()
     @IsDateString()
     dueDate: string;
 }
