@@ -1,14 +1,4 @@
-import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    HttpStatus,
-    Param,
-    ParseUUIDPipe,
-    Patch,
-    Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthorsService } from './authors.service';
 import { CreateAuthorDto } from './dto/create-author.dto';
@@ -22,7 +12,7 @@ import { Role } from '../common/enums/role.enum';
 @ApiTags('authors')
 @Controller('authors')
 export class AuthorsController {
-    constructor(private readonly authorsService: AuthorsService) {}
+    constructor(private readonly authorsService: AuthorsService) { }
 
     @Roles(Role.ADMIN)
     @Post()
@@ -45,9 +35,7 @@ export class AuthorsController {
     @ApiOperation({ summary: 'Get an author by id' })
     @ApiResponse({ status: HttpStatus.OK, type: AuthorResponseDto })
     @ApiResponse({ status: HttpStatus.NOT_FOUND })
-    findOne(
-        @Param('id', ParseUUIDPipe) id: string,
-    ): Promise<AuthorResponseDto> {
+    findOne(@Param('id', ParseUUIDPipe) id: string): Promise<AuthorResponseDto> {
         return this.authorsService.findOne(id);
     }
 
@@ -56,10 +44,7 @@ export class AuthorsController {
     @ApiOperation({ summary: 'Update an author' })
     @ApiResponse({ status: HttpStatus.OK, type: AuthorResponseDto })
     @ApiResponse({ status: HttpStatus.NOT_FOUND })
-    update(
-        @Param('id', ParseUUIDPipe) id: string,
-        @Body() dto: UpdateAuthorDto,
-    ): Promise<AuthorResponseDto> {
+    update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateAuthorDto): Promise<AuthorResponseDto> {
         return this.authorsService.update(id, dto);
     }
 
@@ -68,9 +53,7 @@ export class AuthorsController {
     @ApiOperation({ summary: 'Delete an author' })
     @ApiResponse({ status: HttpStatus.OK })
     @ApiResponse({ status: HttpStatus.NOT_FOUND })
-    remove(
-        @Param('id', ParseUUIDPipe) id: string,
-    ): Promise<{ message: string }> {
+    remove(@Param('id', ParseUUIDPipe) id: string): Promise<{ message: string }> {
         return this.authorsService.remove(id);
     }
 }

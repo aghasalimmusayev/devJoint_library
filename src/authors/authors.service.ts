@@ -25,27 +25,26 @@ export class AuthorsService {
     }
 
     async findOne(id: string): Promise<AuthorResponseDto> {
-        const author = await this.getOrThrow(id);
+        const author = await this.authorRepository.findOne({ where: { id } });
+        if (!author)
+            throw new NotFoundException(`Author with id ${id} not found`);
         return new AuthorResponseDto(author);
     }
 
     async update(id: string, dto: UpdateAuthorDto): Promise<AuthorResponseDto> {
-        const author = await this.getOrThrow(id);
+        const author = await this.authorRepository.findOne({ where: { id } });
+        if (!author)
+            throw new NotFoundException(`Author with id ${id} not found`);
         Object.assign(author, dto);
         const saved = await this.authorRepository.save(author);
         return new AuthorResponseDto(saved);
     }
 
     async remove(id: string): Promise<{ message: string }> {
-        const author = await this.getOrThrow(id);
-        await this.authorRepository.remove(author);
-        return { message: 'The author has been removed' };
-    }
-
-    async getOrThrow(id: string): Promise<Author> {
         const author = await this.authorRepository.findOne({ where: { id } });
         if (!author)
             throw new NotFoundException(`Author with id ${id} not found`);
-        return author;
+        await this.authorRepository.remove(author);
+        return { message: 'The author has been removed' };
     }
 }

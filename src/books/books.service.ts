@@ -24,7 +24,7 @@ export class BooksService {
     ) {}
 
     async create(dto: CreateBookDto): Promise<BookResponseDto> {
-        await this.authorsService.getOrThrow(dto.authorId);
+        await this.authorsService.findOne(dto.authorId);
         const book = this.bookRepository.create({
             ...dto,
             availableCopies: dto.totalCopies,
@@ -58,35 +58,43 @@ export class BooksService {
     }
 
     async findOne(id: string): Promise<BookResponseDto> {
-        const book = await this.getOrThrow(id);
+        const book = await this.bookRepository.findOne({
+            where: { id },
+            relations: ['author'],
+        });
+        if (!book) throw new NotFoundException(`Book with id ${id} not found`);
         return new BookResponseDto(book);
     }
 
     async update(id: string, dto: UpdateBookDto): Promise<BookResponseDto> {
-        const book = await this.getOrThrow(id);
-        if (dto.authorId) await this.authorsService.getOrThrow(dto.authorId);
+        const book = await this.bookRepository.findOne({
+            where: { id },
+            relations: ['author'],
+        });
+        if (!book) throw new NotFoundException(`Book with id ${id} not found`);
+        if (dto.authorId) await this.authorsService.findOne(dto.authorId);
         Object.assign(book, dto);
         const saved = await this.save(book);
         return new BookResponseDto(saved);
     }
 
     async remove(id: string): Promise<{ message: string }> {
-        const book = await this.getOrThrow(id);
+        const book = await this.bookRepository.findOne({
+            where: { id },
+            relations: ['author'],
+        });
+        if (!book) throw new NotFoundException(`Book with id ${id} not found`);
         await this.bookRepository.remove(book);
         return { message: 'The book has been removed' };
     }
 
     private async save(book: Book): Promise<Book> {
         const saved = await this.bookRepository.save(book);
-        return this.getOrThrow(saved.id);
-    }
-
-    private async getOrThrow(id: string): Promise<Book> {
-        const book = await this.bookRepository.findOne({
-            where: { id },
+        const reloaded = await this.bookRepository.findOne({
+            where: { id: saved.id },
             relations: ['author'],
         });
-        if (!book) throw new NotFoundException(`Book with id ${id} not found`);
-        return book;
+        if (!reloaded) throw new NotFoundException(`Book with id ${saved.id} not found`);
+        return reloaded;
     }
 }
