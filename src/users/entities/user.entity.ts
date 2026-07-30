@@ -9,8 +9,8 @@ export class User extends BaseEntity {
     @Column()
     name: string;
 
-    @Column()
-    surname: string;
+    @Column({ type: 'varchar', nullable: true })
+    surname: string | null;
 
     @Column({ type: 'enum', enum: Gender })
     gender: Gender;

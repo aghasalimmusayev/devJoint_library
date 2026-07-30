@@ -14,9 +14,9 @@ export class UserResponseDto {
     @Expose()
     name: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @Expose()
-    surname: string;
+    surname: string | null;
 
     @ApiProperty({ enum: Gender })
     @Expose()

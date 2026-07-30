@@ -13,8 +13,10 @@ async function run() {
 
     const email = process.env.ADMIN_EMAIL;
     const password = process.env.ADMIN_PASSWORD;
-    if (!email || !password) {
-        console.error('ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env');
+    const name = process.env.ADMIN_NAME;
+    const surname = process.env.ADMIN_SURNAME;
+    if (!email || !password || !name || !surname) {
+        console.error('ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME and ADMIN_SURNAME must be set in .env');
         await app.close();
         process.exit(1);
     }
@@ -28,8 +30,8 @@ async function run() {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const admin = userRepository.create({
-        name: 'Admin',
-        surname: 'Admin',
+        name,
+        surname,
         gender: Gender.MALE,
         email,
         password: hashedPassword,
