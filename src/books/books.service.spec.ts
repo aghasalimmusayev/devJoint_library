@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { BooksService } from './books.service';
 import { Book } from './entities/book.entity';
 import { AuthorsService } from '../authors/authors.service';
+import { CategoriesService } from '../categories/categories.service';
 
 type MockRepository = Partial<Record<keyof Repository<Book>, jest.Mock>>;
 
@@ -14,7 +15,9 @@ const createMockQueryBuilder = () => ({
     skip: jest.fn().mockReturnThis(),
     take: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
     getManyAndCount: jest.fn(),
+    getMany: jest.fn().mockResolvedValue([]),
 });
 
 const createMockRepository = (): MockRepository => ({
@@ -29,9 +32,11 @@ describe('BooksService', () => {
     let service: BooksService;
     let repository: MockRepository;
     let authorsService: { findOne: jest.Mock };
+    let categoriesService: { findByIds: jest.Mock };
 
     beforeEach(async () => {
         authorsService = { findOne: jest.fn() };
+        categoriesService = { findByIds: jest.fn() };
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
@@ -43,6 +48,10 @@ describe('BooksService', () => {
                 {
                     provide: AuthorsService,
                     useValue: authorsService,
+                },
+                {
+                    provide: CategoriesService,
+                    useValue: categoriesService,
                 },
             ],
         }).compile();

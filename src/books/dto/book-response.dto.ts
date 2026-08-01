@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose, Type } from 'class-transformer';
 import { Book } from '../entities/book.entity';
 import { AuthorResponseDto } from '../../authors/dto/author-response.dto';
+import { CategoryResponseDto } from '../../categories/dto/category-response.dto';
 
 @Exclude()
 export class BookResponseDto {
@@ -33,6 +34,11 @@ export class BookResponseDto {
     @Expose()
     @Type(() => AuthorResponseDto)
     author: AuthorResponseDto;
+
+    @ApiProperty({ type: () => [CategoryResponseDto] })
+    @Expose()
+    @Type(() => CategoryResponseDto)
+    categories: CategoryResponseDto[];
 
     @ApiProperty()
     @Expose()

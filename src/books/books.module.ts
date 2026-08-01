@@ -4,9 +4,10 @@ import { Book } from './entities/book.entity';
 import { BooksService } from './books.service';
 import { BooksController } from './books.controller';
 import { AuthorsModule } from '../authors/authors.module';
+import { CategoriesModule } from '../categories/categories.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Book]), AuthorsModule],
+    imports: [TypeOrmModule.forFeature([Book]), AuthorsModule, CategoriesModule],
     controllers: [BooksController],
     providers: [BooksService],
     exports: [BooksService],

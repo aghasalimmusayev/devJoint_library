@@ -1,12 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import {
-    IsDateString,
-    IsInt,
-    IsNotEmpty,
-    IsString,
-    IsUUID,
-    Min,
-} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ArrayUnique, IsArray, IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class CreateBookDto {
     @ApiProperty()
@@ -31,4 +24,11 @@ export class CreateBookDto {
     @ApiProperty()
     @IsUUID()
     authorId: string;
+
+    @ApiPropertyOptional({ type: [String] })
+    @IsOptional()
+    @IsArray()
+    @ArrayUnique()
+    @IsUUID('4', { each: true })
+    categoryIds?: string[];
 }

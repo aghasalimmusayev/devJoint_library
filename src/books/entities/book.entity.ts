@@ -1,7 +1,8 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { Author } from '../../authors/entities/author.entity';
 import { Loan } from '../../loans/entities/loan.entity';
+import { Category } from '../../categories/entities/category.entity';
 
 @Entity('books')
 export class Book extends BaseEntity {
@@ -29,4 +30,12 @@ export class Book extends BaseEntity {
 
     @OneToMany(() => Loan, (loan) => loan.book)
     loans: Loan[];
+
+    @ManyToMany(() => Category, (category) => category.books)
+    @JoinTable({
+        name: 'book_categories',
+        joinColumn: { name: 'bookId', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'categoryId', referencedColumnName: 'id' },
+    })
+    categories: Category[];
 }

@@ -7,6 +7,7 @@ import typeormConfig from './config/typeorm.config';
 import jwtConfig from './config/jwt.config';
 import { AuthorsModule } from './authors/authors.module';
 import { BooksModule } from './books/books.module';
+import { CategoriesModule } from './categories/categories.module';
 import { LoansModule } from './loans/loans.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
@@ -21,6 +22,7 @@ import { AuthModule } from './auth/auth.module';
         }),
         AuthorsModule,
         BooksModule,
+        CategoriesModule,
         LoansModule,
         UsersModule,
         AuthModule,

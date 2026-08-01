@@ -51,9 +51,12 @@ describe('LoansService', () => {
     });
 
     describe('create', () => {
+        const futureDueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .slice(0, 10);
         const dto = {
             bookId: 'book-1',
-            dueDate: '2026-08-01',
+            dueDate: futureDueDate,
         };
         const currentUserId = 'user-1';
 
