@@ -1,8 +1,9 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LoansService } from './loans.service';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { UpdateLoanDto } from './dto/update-loan.dto';
+import { LoanQueryDto } from './dto/loan-query.dto';
 import { LoanResponseDto } from './dto/loan-response.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
@@ -23,10 +24,10 @@ export class LoansController {
     }
 
     @Get()
-    @ApiOperation({ summary: 'List loans (own loans for USER, all loans for ADMIN)' })
-    @ApiResponse({ status: HttpStatus.OK, type: [LoanResponseDto] })
-    findAll(@CurrentUser() currentUser: AuthenticatedUser): Promise<LoanResponseDto[]> {
-        return this.loansService.findAll(currentUser);
+    @ApiOperation({ summary: 'List loans (own loans for USER, all loans for ADMIN) with filtering and pagination' })
+    @ApiResponse({ status: HttpStatus.OK })
+    findAll(@Query() query: LoanQueryDto, @CurrentUser() currentUser: AuthenticatedUser) {
+        return this.loansService.findAll(currentUser, query);
     }
 
     @Get(':id')

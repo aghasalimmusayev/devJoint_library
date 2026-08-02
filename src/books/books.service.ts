@@ -45,7 +45,7 @@ export class BooksService {
         page: number;
         limit: number;
     }> {
-        const { page, limit, sortBy, order, authorId } = query;
+        const { page, limit, sortBy, order, authorId, categoryId, search, publishedFrom, publishedTo, availableOnly } = query;
         const sortField = isSortableField(sortBy) ? sortBy : 'createdAt';
         // categories is a to-many relation: joining it directly here would multiply
         // rows and break skip/take pagination, so it's batch-loaded separately below.
@@ -56,6 +56,15 @@ export class BooksService {
             .skip((page - 1) * limit)
             .take(limit);
         if (authorId) qb.andWhere('book.authorId = :authorId', { authorId });
+        if (search) qb.andWhere('book.title ILIKE :search', { search: `%${search}%` });
+        if (publishedFrom) qb.andWhere('book.publishedDate >= :publishedFrom', { publishedFrom });
+        if (publishedTo) qb.andWhere('book.publishedDate <= :publishedTo', { publishedTo });
+        if (availableOnly) qb.andWhere('book.availableCopies > 0');
+        // Filtering to one specific category keeps at most one matching join row per
+        // book, so this inner join is safe alongside skip/take (unlike attachCategories).
+        if (categoryId) {
+            qb.innerJoin('book.categories', 'categoryFilter', 'categoryFilter.id = :categoryId', { categoryId });
+        }
         const [books, total] = await qb.getManyAndCount();
         await this.attachCategories(books);
         return {

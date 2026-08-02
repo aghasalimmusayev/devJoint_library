@@ -6,9 +6,11 @@ import { Book } from '../books/entities/book.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { UpdateLoanDto } from './dto/update-loan.dto';
+import { LoanQueryDto } from './dto/loan-query.dto';
 import { LoanResponseDto } from './dto/loan-response.dto';
 import { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
 import { Role } from '../common/enums/role.enum';
+import { LoanStatus } from '../common/enums/loan-status.enum';
 
 const LOAN_RELATIONS = ['book', 'book.author', 'user'];
 
@@ -41,12 +43,48 @@ export class LoansService {
         return new LoanResponseDto(reloaded);
     }
 
-    async findAll(currentUser: AuthenticatedUser): Promise<LoanResponseDto[]> {
-        const loans = await this.loanRepository.find({
-            where: currentUser.role === Role.ADMIN ? {} : { userId: currentUser.id },
-            relations: LOAN_RELATIONS,
-        });
-        return loans.map((loan) => new LoanResponseDto(loan));
+    async findAll(currentUser: AuthenticatedUser, query: LoanQueryDto): Promise<{
+        data: LoanResponseDto[];
+        total: number;
+        page: number;
+        limit: number;
+    }> {
+        const { page, limit, status, bookId, userId, dueDateFrom, dueDateTo } = query;
+        // book/user are many-to-one from Loan's side, so joining them is safe with
+        // skip/take (one row per loan either way) — unlike a to-many join.
+        const qb = this.loanRepository
+            .createQueryBuilder('loan')
+            .leftJoinAndSelect('loan.book', 'book')
+            .leftJoinAndSelect('book.author', 'author')
+            .leftJoinAndSelect('loan.user', 'user')
+            .orderBy('loan.dueDate', 'ASC')
+            .skip((page - 1) * limit)
+            .take(limit);
+
+        if (currentUser.role === Role.ADMIN) {
+            if (userId) qb.andWhere('loan.userId = :userId', { userId });
+        } else {
+            qb.andWhere('loan.userId = :currentUserId', { currentUserId: currentUser.id });
+        }
+        if (bookId) qb.andWhere('loan.bookId = :bookId', { bookId });
+        if (dueDateFrom) qb.andWhere('loan.dueDate >= :dueDateFrom', { dueDateFrom });
+        if (dueDateTo) qb.andWhere('loan.dueDate <= :dueDateTo', { dueDateTo });
+
+        if (status === LoanStatus.RETURNED) {
+            qb.andWhere('loan.returnedAt IS NOT NULL');
+        } else if (status === LoanStatus.ACTIVE) {
+            qb.andWhere('loan.returnedAt IS NULL');
+        } else if (status === LoanStatus.OVERDUE) {
+            qb.andWhere('loan.returnedAt IS NULL').andWhere('loan.dueDate < :now', { now: new Date() });
+        }
+
+        const [loans, total] = await qb.getManyAndCount();
+        return {
+            data: loans.map((loan) => new LoanResponseDto(loan)),
+            total,
+            page,
+            limit,
+        };
     }
 
     async findOne(id: string, currentUserId: string, currentUserRole: Role): Promise<LoanResponseDto> {

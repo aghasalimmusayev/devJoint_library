@@ -16,6 +16,7 @@ const createMockQueryBuilder = () => ({
     take: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
+    innerJoin: jest.fn().mockReturnThis(),
     getManyAndCount: jest.fn(),
     getMany: jest.fn().mockResolvedValue([]),
 });
@@ -33,11 +34,9 @@ describe('BooksService', () => {
     let repository: MockRepository;
     let authorsService: { findOne: jest.Mock };
     let categoriesService: { findByIds: jest.Mock };
-
     beforeEach(async () => {
         authorsService = { findOne: jest.fn() };
         categoriesService = { findByIds: jest.fn() };
-
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 BooksService,
@@ -55,15 +54,12 @@ describe('BooksService', () => {
                 },
             ],
         }).compile();
-
         service = module.get<BooksService>(BooksService);
         repository = module.get(getRepositoryToken(Book));
     });
-
     it('should be defined', () => {
         expect(service).toBeDefined();
     });
-
     describe('create', () => {
         const dto = {
             title: '1984',
@@ -72,20 +68,16 @@ describe('BooksService', () => {
             totalCopies: 3,
             authorId: 'author-1',
         };
-
         it('should throw NotFoundException when the author does not exist', async () => {
             authorsService.findOne.mockRejectedValue(new NotFoundException());
-
             await expect(service.create(dto)).rejects.toThrow(
                 NotFoundException,
             );
             expect(repository.create).not.toHaveBeenCalled();
         });
-
         it('should create a book with availableCopies seeded from totalCopies', async () => {
             const created = { ...dto, availableCopies: dto.totalCopies };
             const saved = { id: 'book-1', ...created };
-
             authorsService.findOne.mockResolvedValue({ id: dto.authorId });
             repository.create!.mockReturnValue(created);
             repository.save!.mockResolvedValue(saved);
@@ -93,29 +85,24 @@ describe('BooksService', () => {
                 ...saved,
                 author: { id: dto.authorId },
             });
-
             const result = await service.create(dto);
-
             expect(repository.create).toHaveBeenCalledWith(
                 expect.objectContaining({ availableCopies: dto.totalCopies }),
             );
             expect(result.id).toBe('book-1');
         });
     });
-
     describe('findAll', () => {
         it('should paginate and map results to BookResponseDto', async () => {
             const qb = createMockQueryBuilder();
             const books = [{ id: 'book-1', title: '1984' }];
             qb.getManyAndCount.mockResolvedValue([books, 1]);
             repository.createQueryBuilder!.mockReturnValue(qb);
-
             const result = await service.findAll({
                 page: 1,
                 limit: 10,
                 order: 'ASC',
             });
-
             expect(qb.skip).toHaveBeenCalledWith(0);
             expect(qb.take).toHaveBeenCalledWith(10);
             expect(qb.andWhere).not.toHaveBeenCalled();
@@ -126,19 +113,16 @@ describe('BooksService', () => {
                 limit: 10,
             });
         });
-
         it('should filter by authorId when provided', async () => {
             const qb = createMockQueryBuilder();
             qb.getManyAndCount.mockResolvedValue([[], 0]);
             repository.createQueryBuilder!.mockReturnValue(qb);
-
             await service.findAll({
                 page: 1,
                 limit: 10,
                 order: 'ASC',
                 authorId: 'author-1',
             });
-
             expect(qb.andWhere).toHaveBeenCalledWith(
                 'book.authorId = :authorId',
                 {
@@ -146,50 +130,101 @@ describe('BooksService', () => {
                 },
             );
         });
+        it('should search by title using ILIKE', async () => {
+            const qb = createMockQueryBuilder();
+            qb.getManyAndCount.mockResolvedValue([[], 0]);
+            repository.createQueryBuilder!.mockReturnValue(qb);
+            await service.findAll({
+                page: 1,
+                limit: 10,
+                order: 'ASC',
+                search: 'farm',
+            });
+            expect(qb.andWhere).toHaveBeenCalledWith('book.title ILIKE :search', {
+                search: '%farm%',
+            });
+        });
+        it('should filter by publishedFrom/publishedTo date range', async () => {
+            const qb = createMockQueryBuilder();
+            qb.getManyAndCount.mockResolvedValue([[], 0]);
+            repository.createQueryBuilder!.mockReturnValue(qb);
+            await service.findAll({
+                page: 1,
+                limit: 10,
+                order: 'ASC',
+                publishedFrom: '1940-01-01',
+                publishedTo: '1950-01-01',
+            });
+            expect(qb.andWhere).toHaveBeenCalledWith('book.publishedDate >= :publishedFrom', {
+                publishedFrom: '1940-01-01',
+            });
+            expect(qb.andWhere).toHaveBeenCalledWith('book.publishedDate <= :publishedTo', {
+                publishedTo: '1950-01-01',
+            });
+        });
+        it('should filter to only available books when availableOnly is set', async () => {
+            const qb = createMockQueryBuilder();
+            qb.getManyAndCount.mockResolvedValue([[], 0]);
+            repository.createQueryBuilder!.mockReturnValue(qb);
+            await service.findAll({
+                page: 1,
+                limit: 10,
+                order: 'ASC',
+                availableOnly: true,
+            });
+            expect(qb.andWhere).toHaveBeenCalledWith('book.availableCopies > 0');
+        });
+        it('should inner join categories when categoryId is provided', async () => {
+            const qb = createMockQueryBuilder();
+            qb.getManyAndCount.mockResolvedValue([[], 0]);
+            repository.createQueryBuilder!.mockReturnValue(qb);
+            await service.findAll({
+                page: 1,
+                limit: 10,
+                order: 'ASC',
+                categoryId: 'category-1',
+            });
+            expect(qb.innerJoin).toHaveBeenCalledWith(
+                'book.categories',
+                'categoryFilter',
+                'categoryFilter.id = :categoryId',
+                { categoryId: 'category-1' },
+            );
+        });
     });
-
     describe('findOne', () => {
         it('should return a book when found', async () => {
             repository.findOne!.mockResolvedValue({
                 id: 'book-1',
                 title: '1984',
             });
-
             const result = await service.findOne('book-1');
-
             expect(result.id).toBe('book-1');
         });
-
         it('should throw NotFoundException when the book does not exist', async () => {
             repository.findOne!.mockResolvedValue(null);
-
             await expect(service.findOne('missing-id')).rejects.toThrow(
                 NotFoundException,
             );
         });
     });
-
     describe('update', () => {
         it('should throw NotFoundException when the book does not exist', async () => {
             repository.findOne!.mockResolvedValue(null);
-
             await expect(
                 service.update('missing-id', { title: 'New title' }),
             ).rejects.toThrow(NotFoundException);
         });
-
         it('should throw NotFoundException when reassigned to a missing author', async () => {
             repository.findOne!.mockResolvedValue({
                 id: 'book-1',
                 title: '1984',
             });
             authorsService.findOne.mockRejectedValue(new NotFoundException());
-
             await expect(
                 service.update('book-1', { authorId: 'missing-author' }),
             ).rejects.toThrow(NotFoundException);
         });
-
         it('should update and return the book', async () => {
             const book = { id: 'book-1', title: '1984' };
             repository.findOne!.mockResolvedValueOnce(book);
@@ -201,32 +236,25 @@ describe('BooksService', () => {
                 ...book,
                 title: 'Animal Farm',
             });
-
             const result = await service.update('book-1', {
                 title: 'Animal Farm',
             });
-
             expect(repository.save).toHaveBeenCalledWith(
                 expect.objectContaining({ title: 'Animal Farm' }),
             );
             expect(result.title).toBe('Animal Farm');
         });
     });
-
     describe('remove', () => {
         it('should remove an existing book', async () => {
             const book = { id: 'book-1', title: '1984' };
             repository.findOne!.mockResolvedValue(book);
             repository.remove!.mockResolvedValue(book);
-
             await service.remove('book-1');
-
             expect(repository.remove).toHaveBeenCalledWith(book);
         });
-
         it('should throw NotFoundException when removing a missing book', async () => {
             repository.findOne!.mockResolvedValue(null);
-
             await expect(service.remove('missing-id')).rejects.toThrow(
                 NotFoundException,
             );
