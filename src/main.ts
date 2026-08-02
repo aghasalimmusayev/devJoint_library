@@ -1,10 +1,14 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { initializeTransactionalContext } from 'typeorm-transactional';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
+    // Must run before the DataSource is created (i.e. before NestFactory.create),
+    // so @Transactional() has its async-local-storage context ready in time.
+    initializeTransactionalContext();
     const app = await NestFactory.create(AppModule);
     app.useGlobalPipes(
         new ValidationPipe({

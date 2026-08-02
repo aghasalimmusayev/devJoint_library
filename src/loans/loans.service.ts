@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Transactional } from 'typeorm-transactional';
 import { Loan } from './entities/loan.entity';
 import { Book } from '../books/entities/book.entity';
 import { User } from '../users/entities/user.entity';
@@ -23,6 +24,10 @@ export class LoansService {
         private readonly userRepository: Repository<User>,
     ) { }
 
+    // Book.availableCopies and the new Loan row must land together or not at all —
+    // otherwise a failure between the two saves would silently strand a decremented
+    // copy count with no loan to account for it.
+    @Transactional()
     async create(data: CreateLoanDto, currentUserId: string): Promise<LoanResponseDto> {
         this.assertFutureDueDate(data.dueDate);
         const book = await this.bookRepository.findOne({
@@ -111,6 +116,9 @@ export class LoansService {
         return new LoanResponseDto(saved);
     }
 
+    // Same reasoning as create(): marking the loan returned and restoring the
+    // book's copy count are one logical operation and must commit/rollback together.
+    @Transactional()
     async returnBook(id: string): Promise<LoanResponseDto> {
         const loan = await this.loanRepository.findOne({
             where: { id },
